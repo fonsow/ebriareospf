@@ -1,0 +1,35 @@
+#!/usr/bin/env python2
+from briareos.zcluster import ZCluster
+from briareos.utils import logger
+from briareos.common import VERSION
+
+import sys
+import signal
+
+INFO = "Briareos Z-Cluster"
+
+
+def run_forever():
+    signal.signal(signal.SIGINT, stop)
+    signal.signal(signal.SIGTERM, stop)
+    while True:
+        signal.pause()
+
+
+def stop(sig, frame):
+    zcluster.stop()
+    logger.success("Done")
+    sys.exit(0)
+
+
+if __name__ == "__main__":
+    logger.banner(INFO, VERSION)
+
+    # TODO argparse
+    if len(sys.argv) > 1:
+        zcluster = ZCluster(sys.argv[1])
+    else:
+        zcluster = ZCluster()
+
+    zcluster.start()
+    run_forever()

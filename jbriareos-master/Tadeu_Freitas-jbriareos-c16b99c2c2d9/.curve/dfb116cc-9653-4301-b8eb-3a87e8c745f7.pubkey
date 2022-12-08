@@ -1,0 +1,10 @@
+# ** Generated on 2020-08-31T23:27:37+0100 by ZCert **
+#    ZeroMQ CURVE Public Certificate
+#    Exchange securely, or use a secure mechanism to verify the contents
+#    of this file after exchange. Store public certificates in your home
+#    directory, in the .curve subdirectory.
+
+metadata
+    id = "dfb116cc-9653-4301-b8eb-3a87e8c745f7"
+curve
+    public-key = "/Y]140!yU7lzHg7Z(?0]I}t5[3G^zQyl(g/tzm]C"

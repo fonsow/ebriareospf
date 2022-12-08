@@ -1,0 +1,4 @@
+gcc
+python-dev
+python-pip
+libnetfilter-queue-dev

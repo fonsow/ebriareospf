@@ -1,0 +1,34 @@
+VERSION = "0.36 - Alpha"
+
+BHC_CONFIG_PATH = "config/bhc.json"
+
+BRIAREOS_LOG_PATH = "briareos.log"
+
+ZCLIENT_CONFIG_PATH = "config/client.json"
+ZWORKER_CONFIG_PATH = "config/worker.json"
+ZBROKER_CONFIG_PATH = "config/broker.json"
+ZCLUSTER_CONFIG_PATH = "config/cluster.json"
+
+# PIPELINES_DEFAULT_ROOT_PATH = "/etc/briareos/engine/pipelines/"
+# MODULES_DEFAULT_ROOT_PATH = "/etc/briareos/engine/modules/"
+
+PIPELINES_ROOT_PATH = "engine/pipelines/"
+MODULES_ROOT_PATH = "engine/modules/"
+
+
+INPUT_PIPELINE = 1
+OUTPUT_PIPELINE = 2
+
+INLINE_LOCAL_PROCESSING_MODE = 0
+INLINE_DISTRIBUTED_PROCESSING_MODE = 1
+PARALLEL_PROCESSING_MODE = 2
+DISTRIBUTED_PROCESSING_MODE = 3
+
+MAX_QUEUE_ID = 65535
+
+VERDICT_ACCEPT = 0
+VERDICT_DROP = 1
+
+SINGLE_INPUT_MODE = 0
+MULTIPLE_INPUT_MODE = 1
+

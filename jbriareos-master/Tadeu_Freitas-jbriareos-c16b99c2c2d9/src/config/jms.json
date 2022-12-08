@@ -1,0 +1,8 @@
+{
+  "jms": {
+    "unsecure_port": 11335,
+    "port": 11336,
+    "sink_port": 22222,
+    "publisher_port": 22223
+  }
+}

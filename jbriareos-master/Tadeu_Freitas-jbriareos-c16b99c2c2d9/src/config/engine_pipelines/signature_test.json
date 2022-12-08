@@ -1,0 +1,13 @@
+{
+  "type": "input",
+  "protocol": "TCP",
+  "interface": "any",
+  "mode": "inline",
+  "verdict": "accept",
+  "name": "Signature test Pipeline",
+  "modules": [
+    {
+      "name": "signature_test_module"
+    }
+  ]
+}

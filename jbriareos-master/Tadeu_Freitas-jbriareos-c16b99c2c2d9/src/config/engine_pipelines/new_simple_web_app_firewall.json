@@ -1,0 +1,11 @@
+{
+  "type": "input",
+  "verdict": "accept",
+  "protocol": "TCP",
+  "name": "New Simple Web App Firewall",
+  "modules": [
+    {
+      "name": "app_data_filter"
+    }
+  ]
+}

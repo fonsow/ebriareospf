@@ -1,0 +1,9 @@
+{
+  "cluster": {
+    "worker_manager": {
+      "ip": "127.0.0.1",
+      "port": 10003,
+      "sink_port": 10004
+    }
+  }
+}

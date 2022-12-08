@@ -1,0 +1,3 @@
+https://www.slideshare.net/fcrippa/europycon2011-implementing-distributed-application-using-zeromq
+https://www.slideshare.net/j2d2/zeromq-super-sockets-by-j2-labs
+http://zguide.zeromq.org/py:lbbroker

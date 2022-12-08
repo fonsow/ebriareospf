@@ -1,0 +1,36 @@
+#!/usr/bin/env python2
+from briareos.bhc import BHC
+from briareos.utils import logger
+from briareos.common import VERSION
+
+import os
+import signal
+import sys
+
+INFO = "Briareos Host Component"
+
+
+def run_forever():
+    signal.signal(signal.SIGINT, stop)
+    signal.signal(signal.SIGTERM, stop)
+    while True:
+        signal.pause()
+
+
+def stop(sig, frame):
+    bhc.stop()
+    logger.success("Done")
+    sys.exit(0)
+
+
+if __name__ == "__main__":
+    if os.geteuid() != 0:
+        logger.error("BHC must be run as root")
+        sys.exit(1)
+
+    # TODO service already running!
+
+    logger.banner(INFO, VERSION)
+    bhc = BHC()
+    bhc.start()
+    run_forever()

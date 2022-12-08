@@ -1,0 +1,17 @@
+[
+  {
+    "chain": "INPUT",
+    "protocol": "tcp",
+    "itf": "any",
+    "srcIp": "localhost",
+    "srcPort": "1337",
+    "dstIp": "localhost",
+    "dstPort": "80",
+    "action": "ACCEPT"
+  },
+  {
+    "chain": "INPUT",
+    "protocol": "udp",
+    "action": "DROP"
+  }
+]

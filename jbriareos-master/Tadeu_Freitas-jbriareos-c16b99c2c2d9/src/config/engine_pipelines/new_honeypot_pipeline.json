@@ -1,0 +1,11 @@
+{
+  "type": "input",
+  "verdict": "accept",
+  "name": "Honeypot Pipeline",
+  "protocol": "TCP",
+  "modules": [
+    {
+      "name": "honeypot"
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+Please install Docker to be able to run Briareos
+(https://docs.docker.com/engine/install/)
+
+How to build Briareos's worker's docker image:
+    - From inside the project folder (Briareos_Java, where this README is located):
+        ./src/build-zworker-docker-image.sh
+
+    - There is no need to run this command any more than once, as a ZCluster executes it when it is initialized
+
+nfqueue bindings:
+    - Before executing any component of the system, execute the "make_lib" script, which is inside the nfQueueBind folder
+        - Users must have a JDK package installed, preferably opendjk-11-jdk
+
+Before starting a JMS instance:
+    - Generate a ZMQ certificate via the GenerateZMQCertificate .jar.
+        $ java -jar GenerateZMQCertificate.jar server
+
+Before starting a JHC or ZCluster instance:
+    - Place the JMS's public certificate inside the .servercert folder, at the project's root.
+        - This process must be repeated every time the JMS generates a new certificate for itself.
+
+    - Generate a ZMQ certificate via the GenerateZMQCertificate .jar, and copy it to the JMS.
+        $ java -jar GenerateZMQCertificate.jar [client/cluster]
+    
+        - On the JMS, the file must be renamed to whatever value is present in that certificate's ID field and
+        have a .pubkey extension
+
+            Example:
+            A certificate with the ID field value f5715a68-59d8-4b69-8ad9-f9139f6b5180,
+            must be renamed on the JMS to f5715a68-59d8-4b69-8ad9-f9139f6b5180.pubkey
+    
+    - If a cluster certificate was generated, it will be present on the .clustercert folder
+    - If a JHC certificate was generated, it will be present on the .clientcert folder
+    
+NOTE:
+    Each time the artifacts are built, delete their signatures. They are broken.
+    Delete the files with .SF extension, which are in the META-INF folder, inside the .jars.

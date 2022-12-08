@@ -1,2 +1,2 @@
 # ebriareospf
-attempt to improve briareos using eBPF
+ attempt to improve briares IDS with eBPF tech

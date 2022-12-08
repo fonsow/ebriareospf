@@ -1,0 +1,10 @@
+{
+  "type": "input",
+  "verdict": "accept",
+  "name": "New Signature Test Pipeline",
+  "modules": [
+    {
+      "name": "signature_test_module"
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+{"nodes": [{"color": "#00BC8C", "size": 6, "id": "n0", "label": "pid_fetcher"}, {"color": "#F39C12", "size": 9, "id": "n1", "label": "leak_detector"}, {"color": "#F39C12", "size": 14, "id": "n2", "label": "shell_detector"}], "edges": [{"color": "#DDDDDD", "source": "n0", "id": "e0", "target": "n1"}, {"color": "#DDDDDD", "source": "n0", "id": "e1", "target": "n2"}]}

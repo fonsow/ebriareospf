@@ -1,0 +1,8 @@
+# ** Generated on 2020-08-31T22:49:21+0100 by ZCert **
+#    ZeroMQ CURVE Public Certificate
+#    Exchange securely, or use a secure mechanism to verify the contents
+#    of this file after exchange. Store public certificates in your home
+#    directory, in the .curve subdirectory.
+
+curve
+    public-key = "YfnqBsv6/}.rpeWjvYna@K*6E]l<6Tx@O9!&Q<*e"

@@ -1,0 +1,13 @@
+{
+  "type": "input",
+  "protocol": "TCP",
+  "interface": "any",
+  "mode": "inline",
+  "verdict": "accept",
+  "name": "Honeypot Pipeline",
+  "modules": [
+    {
+      "name": "honeypot"
+    }
+  ]
+}

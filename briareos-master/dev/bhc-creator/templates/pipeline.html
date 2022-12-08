@@ -1,0 +1,179 @@
+<html>
+<head>
+    <title>Pipeline Editor</title>
+    <link rel="stylesheet" href="css/tether.min.css">
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/custom.min.css">
+    <link rel="stylesheet" href="css/font-awesome-4.7.0/css/font-awesome.min.css">
+    <style type="text/css">
+      #container {
+        max-width: 400px;
+        height: 400px;
+        margin: auto;
+      }
+    </style>
+</head>
+<body>
+<div class="navbar navbar-toggleable-md fixed-top navbar-inverse bg-primary">
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="container">
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <a href="/" class="navbar-brand">BHC Editor</a>
+          <ul class="navbar-nav">
+            <li class="nav-item">
+              <a class="nav-link" href="/pipeline">Pipeline Editor</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/help">Help</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+        <div class="col-lg-10">
+            <h3>Pipeline Editor</h3>
+            <div style="padding-top: 30px">
+                <form id="upload-pipeline" method="post" enctype="multipart/form-data">
+                    <div class="row">
+                        <div class="col">
+                            <button type="button" class="btn btn-success">Create New <i class="fa fa-plus fa-fw" aria-hidden="true"></i></button>
+                            <button type="button" style="margin-left: 20px; margin-right: 20px" class="btn btn-warning">Save <i class="fa fa-download fa-fw" aria-hidden="true"></i></button>
+                                <label class="btn btn-info" style="margin-top: 7px;" for="file-button">
+                                    <input id="file-button" type="file" name="file" style="display:none;" onchange="$('#filename').html(this.files[0].name); upload_pipeline();">
+                                    <span id="filename">Open <i class="fa fa-folder-open fa-fw" aria-hidden="true"></i></span>
+                                </label>
+
+                            <label class="col-form-label" style="padding-right: 18px; padding-left: 18px;">or</label>
+                            <button type="button" class="btn btn-outline-secondary">Drag here</button>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            <div class="row" style="margin-left: 0; margin-top: 30px;">
+                               <div class="form-group">
+                                    <label class="col-form-label" for="type-select">Type</label>
+                                    <select class="form-control" style="width: 100px;" id="type-select">
+                                        <option>Input</option>
+                                        <option>Output</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row" style="margin-left: 0; margin-top: -10px;">
+                               <div class="form-group">
+                                    <label class="col-form-label" for="protocol-select">Protocol</label>
+                                    <select class="form-control" style="width: 100px;" id="protocol-select">
+                                        <option>TCP</option>
+                                        <option>UDP</option>
+                                        <option>ICMP</option>
+                                        <option>All</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="row" style="margin-left: 0; margin-top: -10px;">
+                               <div class="form-group">
+                                    <label class="col-form-label" for="interface">Interface</label>
+                                    <input type="text" class="form-control" style="width: 100px;" id="interface" value="All">
+                                </div>
+                            </div>
+
+                            <div class="row" style="margin-left: 0; margin-top: -10px;">
+                               <div class="form-group">
+                                    <label class="col-form-label" for="mode-select">Mode</label>
+                                    <select class="form-control" style="width: 100px;" id="mode-select">
+                                        <option>Inline</option>
+                                        <option>Parallel</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="row" style="margin-left: 0; margin-top: -10px;">
+                               <div class="form-group">
+                                    <label class="col-form-label" for="verdict-select">Default Verdict</label>
+                                    <select class="form-control" style="width: 100px;" id="verdict-select">
+                                        <option>Accept</option>
+                                        <option>Drop</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div style="margin-left: 15px; margin-top: 30px;">
+                    <div id="container" style="height: 70%; max-width: 100%; margin: 0; margin-top: 60px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <!--TODO source IP range?-->
+                </form>
+            </div>
+
+            <div style="padding-top: 30px; display: none">
+                <form>
+                    <div class="form-group col-lg-8">
+                      <label class="col-form-label" for="name">Name</label>
+                      <input type="text" class="form-control" name="name" id="name">
+                    </div>
+
+                    <div class="form-group col-lg-4">
+                      <label class="col-form-label">Ports</label>
+                      <input type="number" class="form-control" name="port">
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script src="js/jquery-3.2.1.min.js"></script>
+    <script src="js/tether.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/sigma.min.js"></script>
+    <script src="js/plugins/sigma.parsers.json.min.js"></script>
+    <script src="js/plugins/sigma.plugins.dragNodes.min.js"></script>
+    <script src="js/plugins/sigma.layout.forceAtlas2.min.js"></script>
+    <script src="js/custom.js"></script>
+    <script>
+        sg = new sigma("container");
+
+        sg.settings({
+            defaultLabelColor: "#ddd",
+            labelHoverShadowColor: "#ddd"
+        });
+
+        loaded = false;
+
+        var dragListener = sigma.plugins.dragNodes(sg, sg.renderers[0]);
+        dragListener.bind("startdrag", function(event) {});
+
+        function upload_pipeline() {
+            var form_data = new FormData($("#upload-pipeline")[0]);
+            $.ajax({
+                type: "POST",
+                url: "/upload_pipeline",
+                data: form_data,
+                contentType: false,
+                cache: false,
+                processData: false,
+                async: false,
+                success: function (filename) {
+                    if (filename !== "error") {
+                        sigma.parsers.json(
+                          filename,
+                          sg,
+                          function() {
+                            sg.graph.nodes().forEach(function(node, i, a) {
+                              node.x = -Math.cos(Math.PI * 2 * i / a.length);
+                              node.y = Math.sin(Math.PI * 2 * i / a.length);
+                            });
+                            sg.refresh();
+                          }
+                        );
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

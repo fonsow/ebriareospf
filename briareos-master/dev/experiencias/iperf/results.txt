@@ -1,0 +1,40 @@
+tpas@hax0rz:~$ iperf -s -p 8888
+------------------------------------------------------------
+Server listening on TCP port 8888
+TCP window size: 85.3 KByte (default)
+------------------------------------------------------------
+[  4] local 10.0.2.15 port 8888 connected with 10.0.2.15 port 58638
+[ ID] Interval       Transfer     Bandwidth
+[  4]  0.0-10.0 sec  4.82 GBytes  4.14 Gbits/sec
+[  5] local 10.0.2.15 port 8888 connected with 10.0.2.15 port 58640
+[  5]  0.0-10.0 sec  5.06 GBytes  4.34 Gbits/sec
+[  4] local 10.0.2.15 port 8888 connected with 10.0.2.15 port 58642
+[  4]  0.0-10.0 sec  5.49 GBytes  4.71 Gbits/sec
+
+
+----------
+
+tpas@hax0rz:~$ iperf -c 10.0.2.15 -p 8888
+------------------------------------------------------------
+Client connecting to 10.0.2.15, TCP port 8888
+TCP window size: 2.50 MByte (default)
+------------------------------------------------------------
+[  3] local 10.0.2.15 port 58638 connected with 10.0.2.15 port 8888
+[ ID] Interval       Transfer     Bandwidth
+[  3]  0.0-10.0 sec  4.82 GBytes  4.14 Gbits/sec
+tpas@hax0rz:~$ iperf -c 10.0.2.15 -p 8888
+------------------------------------------------------------
+Client connecting to 10.0.2.15, TCP port 8888
+TCP window size: 2.50 MByte (default)
+------------------------------------------------------------
+[  3] local 10.0.2.15 port 58640 connected with 10.0.2.15 port 8888
+[ ID] Interval       Transfer     Bandwidth
+[  3]  0.0-10.0 sec  5.06 GBytes  4.35 Gbits/sec
+tpas@hax0rz:~$ iperf -c 10.0.2.15 -p 8888
+------------------------------------------------------------
+Client connecting to 10.0.2.15, TCP port 8888
+TCP window size: 2.50 MByte (default)
+------------------------------------------------------------
+[  3] local 10.0.2.15 port 58642 connected with 10.0.2.15 port 8888
+[ ID] Interval       Transfer     Bandwidth
+[  3]  0.0-10.0 sec  5.49 GBytes  4.72 Gbits/sec

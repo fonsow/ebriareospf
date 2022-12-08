@@ -1,0 +1,26 @@
+{
+  "worker": {
+    "broker": {
+      "ip": "127.0.0.1",
+      "port": 10002
+    },
+    "worker_manager": {
+      "ip": "127.0.0.1",
+      "port": 10003,
+      "sink_port": 10004
+    },
+    "jms": {
+      "ip": "127.0.0.1",
+      "unsecure_port": 11335,
+      "port": 11336,
+      "sink_port": 22222,
+      "publisher_port": 22223
+    },
+    "pipelines": [
+      {
+        "name": "fibonacci",
+        "port": 4000
+      }
+    ]
+  }
+}

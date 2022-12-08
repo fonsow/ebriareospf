@@ -1,0 +1,13 @@
+{
+  "type": "input",
+  "protocol": "TCP",
+  "interface": "any",
+  "mode": "distributed",
+  "verdict": "accept",
+  "name": "Simple Web App Firewall",
+  "modules": [
+    {
+      "name": "app_data_filter"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "pipelines": [
+    {
+      "name": "simple_web_app_firewall",
+      "port": 80
+    }
+  ],
+  "bms": {
+    "ip": "127.0.0.1",
+    "port": 11337
+  },
+  "broker": {
+      "ip": "127.0.0.1",
+      "port": 10001
+  }
+}

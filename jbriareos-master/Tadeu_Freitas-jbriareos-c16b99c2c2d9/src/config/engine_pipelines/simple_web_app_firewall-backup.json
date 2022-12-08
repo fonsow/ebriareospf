@@ -1,0 +1,22 @@
+{
+  "type": "input",
+  "protocol": "TCP",
+  "interface": "any",
+  "mode": "inline",
+  "verdict": "accept",
+  "name": "HTTP Pipeline",
+  "modules": [
+    {
+      "name": "simple_http_parser",
+      "next": ["sqli_detector", "xss_detector"]
+    },
+    {
+      "name": "sqli_detector",
+      "next": "incident_processor"
+    },
+    {
+      "name": "xss_detector",
+      "next": "incident_processor"
+    }
+  ]
+}

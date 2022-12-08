@@ -1,0 +1,3 @@
+JAVA_HOME=$(readlink -f /usr/bin/javac | sed "s:/bin/javac::")
+gcc -fPIC -o libNetfilterQueue.so -shared -I${JAVA_HOME}/include -I${JAVA_HOME}/include/linux library.c -lnfnetlink -lnetfilter_queue
+cp libNetfilterQueue.so /usr/lib

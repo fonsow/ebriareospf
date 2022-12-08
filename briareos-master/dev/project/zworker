@@ -1,0 +1,36 @@
+#!/usr/bin/env python2
+from briareos.zworker import ZWorker
+from briareos.utils import logger
+from briareos.common import VERSION
+
+import signal
+import sys
+
+
+INFO = "Briareos Z-Worker"
+
+
+def run_forever():
+    signal.signal(signal.SIGINT, stop)
+    signal.signal(signal.SIGTERM, stop)
+    while True:
+        signal.pause()
+
+
+def stop(sig, frame):
+    zworker.stop()
+    logger.success("Done")
+    sys.exit(0)
+
+
+if __name__ == "__main__":
+    logger.banner(INFO, VERSION)
+
+    # TODO argparse
+    if len(sys.argv) > 1:
+        zworker = ZWorker(sys.argv[1])
+    else:
+        zworker = ZWorker()
+
+    zworker.start()
+    run_forever()

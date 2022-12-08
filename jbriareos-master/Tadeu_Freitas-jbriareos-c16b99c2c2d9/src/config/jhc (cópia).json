@@ -1,0 +1,41 @@
+{
+  "pipelines": [
+    {
+      "name": "new_simple_web_app_firewall",
+      "port": 4000,
+      "protocol": "TCP",
+      "interface": "any",
+      "mode": "inline",
+      "type": "input",
+      "verdict": "accept",
+      "modules": [
+        {
+          "name": "app_data_filter"
+        }
+      ]
+    },
+    {
+      "port": 7777,
+      "type": "input",
+      "verdict": "accept",
+      "name": "new_honeypot_pipeline",
+      "protocol": "UDP",
+      "modules": [
+        {
+          "name": "honeypot"
+        }
+      ]
+    }
+  ],
+  "jms": {
+    "ip": "127.0.0.1",
+    "unsecure_port": 11335,
+    "port": 11336,
+    "sink_port": 22222,
+    "publisher_port": 22223
+  },
+  "broker": {
+    "ip": "127.0.0.1",
+    "port": 10001
+  }
+}

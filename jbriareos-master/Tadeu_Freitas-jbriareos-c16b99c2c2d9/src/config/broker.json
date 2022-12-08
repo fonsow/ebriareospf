@@ -1,0 +1,15 @@
+{
+  "broker": {
+    "frontend": {
+      "port": 10001
+    },
+    "backend": {
+      "port": 10002
+    },
+    "worker_manager": {
+      "port": 10003,
+      "sink_port": 10004,
+      "interval": 10
+    }
+  }
+}
