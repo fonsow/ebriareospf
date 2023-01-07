@@ -1,3 +1,3 @@
 apt update
 apt install -y $(cat packages.txt)
-pip install -r requirements.txt
+pip3 install -r requirements.txt
