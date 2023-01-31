@@ -1,11 +1,12 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # coding: utf-8
 
 from socket import inet_ntop
 from bcc import BPF
 import ctypes as ct
 
-bpf_text = '''#include <bcc/proto.h>
+bpf_text = '''
+#include <bcc/proto.h>
 #include <linux/sched.h>
 
 // Event structure
