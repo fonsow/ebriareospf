@@ -1,51 +1,59 @@
-import time
-import bcc
+#!/usr/bin/env python
+from time import sleep, strftime
+import argparse
+import errno
+import itertools
+import sys
+import signal
+from bcc import BPF
+from bcc.utils import printb
+from bcc.syscall import syscall_name, syscalls
 
-bpf_text = '''
+text = """
 #include <linux/sched.h>
-#define MAX_SYSCALLS 1000000
+BPF_HASH(data, u32, u64);
 
-struct sys_event_t {
-    u32 id;
-    u64 pid_tgid;
-    u64 ns;
-};
-
-BPF_PERF_OUTPUT(events);
-BPF_HASH(start, u64, u64);
-
-TRACEPOINT_PROBE(raw_syscalls, sys_enter) {
+TRACEPOINT_PROBE(raw_syscalls,sys_exit){
     u64 pid_tgid = bpf_get_current_pid_tgid();
-    u64 t = bpf_ktime_get_ns();
-    start.update(&pid_tgid, &t);
+    u32 key = pid_tgid >> 32;
+    u32 tid = (u32)pid_tgid;
+
+    u64 *val, zero = 0;
+    val = data.lookup_or_try_init(&key, &zero);
+    if(val){
+        lock_xadd(val,1);
+    }
     return 0;
 }
+"""
 
-TRACEPOINT_PROBE(raw_syscalls, sys_exit) {
-    u64 pid_tgid = bpf_get_current_pid_tgid();
-    u64 *start_ns = start.lookup(&pid_tgid);
-    if (!start_ns)
-        return 0;
-    struct sys_event_t event = {};
-    event.id = args->id;
-    event.pid_tgid = pid_tgid;
-    event.ns = bpf_ktime_get_ns() - *start_ns;
-    events.perf_submit(args, &event, sizeof(event));
-    return 0;
-}'''
+agg_colname = "PID\t COMM"
+time_colname = "TIME (us)"
+def agg_colval(key):
+    return syscall_name(key.value)
 
-b = bcc.BPF(text=bpf_text)
+def print_stats():
+    data = bpf["data"]
+    print("[%s]" % strftime("%H:%M:%S"))
+    print("%-22s %8s" % (agg_colname, "COUNT"))
+    for k, v in sorted(data.items(), key=lambda kv: -kv[1].value)[:10]:
+        if k.value == 0xFFFFFFFF:
+            continue    # happens occasionally, we don't need it
+        printb(b"%-22s %8d" % (agg_colval(k), v.value))
+    print("")
+    data.clear()
+    
 
-b.attach_tracepoint("raw_syscalls:sys_exit", "sys_exit")
-
+bpf = BPF(text=text)
+exiting = 0
 while True:
     try:
-        time.sleep(1)
-        print("Syscall ID \t Count")
-        for k, v in b["start"].items():
-            print("%d\t\t%d" % (k.value, v.value))
+        sleep(5)
     except KeyboardInterrupt:
+        exiting = 1
+    
+    print_stats()
+
+    if exiting:
+        print("Bye")
         exit()
-
-
-
