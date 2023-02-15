@@ -11,6 +11,9 @@ from bcc.syscall import syscall_name, syscalls
 
 text = """
 #include <linux/sched.h>
+
+#define MAX_SYSCALL_NAME_LEN 64
+
 BPF_HASH(data, u32, u64);
 
 TRACEPOINT_PROBE(raw_syscalls,sys_exit){
@@ -22,6 +25,7 @@ TRACEPOINT_PROBE(raw_syscalls,sys_exit){
     val = data.lookup_or_try_init(&key, &zero);
     if(val){
         lock_xadd(val,1);
+
     }
     return 0;
 }
@@ -29,8 +33,15 @@ TRACEPOINT_PROBE(raw_syscalls,sys_exit){
 
 agg_colname = "PID\t COMM"
 time_colname = "TIME (us)"
+
+def comm_for_pid(pid):
+    try:
+        return open("/proc/%d/comm" % pid, "rb").read().strip()
+    except Exception:
+        return b"[unknown]"
+
 def agg_colval(key):
-    return syscall_name(key.value)
+    return b"%-6d %-15s" % (key.value, comm_for_pid(key.value))
 
 def print_stats():
     data = bpf["data"]
@@ -42,7 +53,7 @@ def print_stats():
         printb(b"%-22s %8d" % (agg_colval(k), v.value))
     print("")
     data.clear()
-    
+
 
 bpf = BPF(text=text)
 exiting = 0
