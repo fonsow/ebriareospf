@@ -20,7 +20,7 @@ TRACEPOINT_PROBE(raw_syscalls,sys_exit){
     u64 pid_tgid = bpf_get_current_pid_tgid();
     u32 key = pid_tgid >> 32;
     u32 tid = (u32)pid_tgid;
-
+    bpf_trace_printk("%d\\n", args->id);
     u64 *val, zero = 0;
     val = data.lookup_or_try_init(&key, &zero);
     if(val){
@@ -54,16 +54,22 @@ def print_stats():
     print("")
     data.clear()
 
+def print_syscall_name():
+    trace = open("/sys/kernel/debug/tracing/trace_pipe", "r")
+    y = trace.readline().rstrip()
+    x = y.split("bpf_trace_printk: ")
+    print(syscall_name(int(x[1])))
 
 bpf = BPF(text=text)
 exiting = 0
 while True:
     try:
-        sleep(5)
+        sleep(2)
     except KeyboardInterrupt:
         exiting = 1
     
     print_stats()
+    print_syscall_name()
 
     if exiting:
         print("Bye")
