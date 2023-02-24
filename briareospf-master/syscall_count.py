@@ -5,6 +5,7 @@ import errno
 import itertools
 import sys
 import signal
+import os
 from bcc import BPF
 from bcc.utils import printb
 from bcc.syscall import syscall_name, syscalls
@@ -12,15 +13,26 @@ from bcc.syscall import syscall_name, syscalls
 text = """
 #include <linux/sched.h>
 
-#define MAX_SYSCALL_NAME_LEN 64
-
 BPF_HASH(data, u32, u64);
+
+struct data_t{
+    u32 pid;
+    char comm[TASK_COMM_LEN];
+    u32 syscall_id;
+};
+
+BPF_RINGBUF_OUTPUT(syscalls, 8);
 
 TRACEPOINT_PROBE(raw_syscalls,sys_exit){
     u64 pid_tgid = bpf_get_current_pid_tgid();
     u32 key = pid_tgid >> 32;
     u32 tid = (u32)pid_tgid;
-    bpf_trace_printk("%d\\n", args->id);
+    struct data_t event = {};
+    bpf_get_current_comm(&event.comm, sizeof(event.comm));
+    event.pid = key;
+    event.syscall_id = args->id;
+    syscalls.ringbuf_output(&event, sizeof(event),0);
+    
     u64 *val, zero = 0;
     val = data.lookup_or_try_init(&key, &zero);
     if(val){
@@ -54,23 +66,22 @@ def print_stats():
     print("")
     data.clear()
 
-def print_syscall_name():
-    trace = open("/sys/kernel/debug/tracing/trace_pipe", "r")
-    y = trace.readline().rstrip()
-    x = y.split("bpf_trace_printk: ")
-    print(syscall_name(int(x[1])))
+def callback(ctx, data, size):
+    event = bpf["syscalls"].event(data)
+    print("%-10d %-10s %-10s" % (event.pid,event.comm, syscall_name(event.syscall_id)))
+
+
+
 
 bpf = BPF(text=text)
-exiting = 0
-while True:
-    try:
-        sleep(2)
-    except KeyboardInterrupt:
-        exiting = 1
-    
-    print_stats()
-    print_syscall_name()
 
-    if exiting:
+bpf["syscalls"].open_ring_buffer(callback)
+
+while 1:
+    try:
+        bpf.ring_buffer_poll()
+        sleep(0.5)
+        # print_stats() isto n está a ser chamado idkw
+    except KeyboardInterrupt:
         print("Bye")
-        exit()
+        sys.exit(0)
