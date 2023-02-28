@@ -6,6 +6,7 @@ import itertools
 import sys
 import signal
 import os
+from datetime import datetime
 from bcc import BPF
 from bcc.utils import printb
 from bcc.syscall import syscall_name, syscalls
@@ -19,6 +20,7 @@ struct data_t{
     u32 pid;
     char comm[TASK_COMM_LEN];
     u32 syscall_id;
+    u64 ts;
 };
 
 BPF_RINGBUF_OUTPUT(syscalls, 8);
@@ -27,10 +29,12 @@ TRACEPOINT_PROBE(raw_syscalls,sys_exit){
     u64 pid_tgid = bpf_get_current_pid_tgid();
     u32 key = pid_tgid >> 32;
     u32 tid = (u32)pid_tgid;
+    u64 ts = bpf_ktime_get_ns();
     struct data_t event = {};
     bpf_get_current_comm(&event.comm, sizeof(event.comm));
     event.pid = key;
     event.syscall_id = args->id;
+    event.ts = ts;
     syscalls.ringbuf_output(&event, sizeof(event),0);
     
     u64 *val, zero = 0;
@@ -55,6 +59,10 @@ def comm_for_pid(pid):
 def agg_colval(key):
     return b"%-6d %-15s" % (key.value, comm_for_pid(key.value))
 
+def format_ts(nanos):
+    dt = datetime.fromtimestamp(nanos / 1e9)
+    return '{}{:03.0f}'.format(dt.strftime('%Y-%m-%dT%H:%M:%S.%f'), nanos % 1e3)
+
 def print_stats():
     data = bpf["data"]
     print("[%s]" % strftime("%H:%M:%S"))
@@ -68,7 +76,8 @@ def print_stats():
 
 def callback(ctx, data, size):
     event = bpf["syscalls"].event(data)
-    print("%-10d %-10s %-10s" % (event.pid,event.comm, syscall_name(event.syscall_id)))
+    with open("syscalls.txt", "a") as f:  
+        print("%-10d %-10s %-10s %-10s" % (event.pid, format_ts(event.ts), event.comm, syscall_name(event.syscall_id)), file=f)
 
 
 
@@ -80,7 +89,7 @@ bpf["syscalls"].open_ring_buffer(callback)
 while 1:
     try:
         bpf.ring_buffer_poll()
-        sleep(0.5)
+        #sleep(0.5)
         # print_stats() isto n está a ser chamado idkw
     except KeyboardInterrupt:
         print("Bye")
