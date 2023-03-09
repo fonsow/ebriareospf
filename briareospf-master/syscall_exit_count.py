@@ -1,10 +1,5 @@
 #!/usr/bin/env python
 from time import sleep, strftime
-import argparse
-import errno
-import itertools
-import sys
-import signal
 import os
 from datetime import datetime
 from bcc import BPF
@@ -56,12 +51,10 @@ def format_ts(nanos):
 
 def callback(ctx, data, size):
     event = bpf["syscalls"].event(data)
-    with open("sys_exit.txt", "a") as f:  
-        print("%-10d %-10s %-10s %-10s" % (event.pid, format_ts(event.ts), event.comm, syscall_name(event.syscall_id)), file=f)
+    if event.pid != os.getpid():
+        with open("sys_exit.txt", "a") as f:  
+            print("%-10d %-10s %-10s %-10s" % (event.pid, format_ts(event.ts), event.comm, syscall_name(event.syscall_id)), file=f)
 
-
-
-text = ("#define FILTER_PID %d\n" % os.getpid()) + text
 bpf = BPF(text=text)
 
 bpf["syscalls"].open_ring_buffer(callback)
