@@ -5,4 +5,6 @@ Atualmente temos 3 módulos:
         - A diferença dos programas é que o 1º recolhe o evento quando a chamada ao sistema é feita, e o 2º quando a chamada ao sistema é terminada
 
 Para correr os programas basta corrê-los como programas de python normal, mas é recomendado correr como sudo:
-sudo python3 [programa].py
+```
+$ sudo python3 [programa].py
+```
