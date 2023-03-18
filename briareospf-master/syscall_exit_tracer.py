@@ -5,6 +5,7 @@ from datetime import datetime
 from bcc import BPF
 from bcc.utils import printb
 from bcc.syscall import syscall_name, syscalls
+import struct
 
 text = """
 #include <linux/sched.h>
@@ -52,8 +53,9 @@ def format_ts(nanos):
 def callback(ctx, data, size):
     event = bpf["syscalls"].event(data)
     if event.pid != os.getpid():
-        with open("sys_exit.txt", "a") as f:  
-            print("%-10d %-10s %-10d %-10d %-10s %-10s" % (event.pid, event.p_comm, event.ts, time(), event.comm, syscall_name(event.syscall_id)), file=f)
+        with open("sys_exit.bin", "ab") as f:
+            data = struct.pack("<di10s10s10s", event.ts, event.pid, event.p_comm, event.comm, syscall_name(event.syscall_id))
+            f.write(data)
 
 bpf = BPF(text=text)
 
@@ -62,6 +64,5 @@ bpf["syscalls"].open_ring_buffer(callback)
 while 1:
     try:
         bpf.ring_buffer_poll()
-        
     except KeyboardInterrupt:
         os.exit()
