@@ -1,40 +1,36 @@
 #!/usr/bin/env python
-from time import sleep, strftime
-import argparse
-import errno
-import itertools
-import sys
-import signal
+from time import sleep, strftime, time
 import os
 from datetime import datetime
 from bcc import BPF
 from bcc.utils import printb
 from bcc.syscall import syscall_name, syscalls
+import struct
 
 text = """
 #include <linux/sched.h>
 
 struct data_t{
     u32 pid;
+    char p_comm[TASK_COMM_LEN];
     char comm[TASK_COMM_LEN];
     u32 syscall_id;
     u64 ts;
 };
 
+
 BPF_RINGBUF_OUTPUT(syscalls, 8);
 
 TRACEPOINT_PROBE(raw_syscalls,sys_enter){
+    struct task_struct *task;
     u64 pid_tgid = bpf_get_current_pid_tgid();
     u32 key = pid_tgid >> 32;
     u32 tid = (u32)pid_tgid;
-    
-    #ifdef FILTER_PID
-        if (key == FILTER_PID)
-            return 0;
-    #endif
+    task = (struct task_struct *)bpf_get_current_task();
     
     u64 ts = bpf_ktime_get_ns();
     struct data_t event = {};
+    bpf_probe_read_kernel_str(&event.p_comm, TASK_COMM_LEN, task->real_parent->comm);
     bpf_get_current_comm(&event.comm, sizeof(event.comm));
     event.pid = key;
     event.syscall_id = args->id;
@@ -43,6 +39,18 @@ TRACEPOINT_PROBE(raw_syscalls,sys_enter){
     return 0;
 }
 """
+def get_filters():
+    with open('data/filter_syscall.txt', 'r') as file:
+        syscalls = file.readlines()
+    # Remove the newline character at the end of each line
+    syscalls = [line.strip() for line in syscalls]
+
+    with open('data/filter_comm.txt', 'r') as file:
+        comms = file.readlines()
+    # Remove the newline character at the end of each line
+    comms = [line.strip() for line in comms]
+
+    return syscalls,comms
 
 def comm_for_pid(pid):
     try:
@@ -56,12 +64,18 @@ def format_ts(nanos):
 
 def callback(ctx, data, size):
     event = bpf["syscalls"].event(data)
-    with open("sys_enter.txt", "a") as f:  
-        print("%-10d %-10s %-10s %-10s" % (event.pid, format_ts(event.ts), event.comm, syscall_name(event.syscall_id)), file=f)
+    if syscall_name(event.syscall_id).decode('utf-8') not in filter_syscalls and event.comm.decode('utf-8') not in filter_comms:
+        print(syscall_name(event.syscall_id))
+        print(event.comm.decode('utf-8'))
+        ############# WRITE IN PLAINTEXT
+        #with open("data/sys_enter.txt", "a") as f:  
+        #    print("%-10d %-10s %-10s %-10s" % (event.pid, format_ts(event.ts), event.comm, syscall_name(event.syscall_id)), file=f)
+        ############# WRITE IN BINARY
+        #with open("data/sys_enter.bin", "ab") as f:
+            #data = struct.pack("<di10s10s10s", event.ts, event.pid, event.p_comm, event.comm, syscall_name(event.syscall_id))
+            #f.write(data)
 
-
-
-text = ("#define FILTER_PID %d\n" % os.getpid()) + text
+filter_syscalls, filter_comms = get_filters()
 bpf = BPF(text=text)
 
 bpf["syscalls"].open_ring_buffer(callback)
@@ -69,6 +83,5 @@ bpf["syscalls"].open_ring_buffer(callback)
 while 1:
     try:
         bpf.ring_buffer_poll()
-        
     except KeyboardInterrupt:
-        os.exit()
+        os.enter()

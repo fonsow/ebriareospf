@@ -39,6 +39,18 @@ TRACEPOINT_PROBE(raw_syscalls,sys_exit){
     return 0;
 }
 """
+def get_filters():
+    with open('data/filter_syscall.txt', 'r') as file:
+        syscalls = file.readlines()
+    # Remove the newline character at the end of each line
+    syscalls = [line.strip() for line in syscalls]
+
+    with open('data/filter_comm.txt', 'r') as file:
+        comms = file.readlines()
+    # Remove the newline character at the end of each line
+    comms = [line.strip() for line in comms]
+
+    return syscalls,comms
 
 def comm_for_pid(pid):
     try:
@@ -52,11 +64,18 @@ def format_ts(nanos):
 
 def callback(ctx, data, size):
     event = bpf["syscalls"].event(data)
-    if event.pid != os.getpid():
-        with open("sys_exit.bin", "ab") as f:
-            data = struct.pack("<di10s10s10s", event.ts, event.pid, event.p_comm, event.comm, syscall_name(event.syscall_id))
-            f.write(data)
+    if syscall_name(event.syscall_id).decode('utf-8') not in filter_syscalls and event.comm.decode('utf-8') not in filter_comms:
+        print(syscall_name(event.syscall_id))
+        print(event.comm.decode('utf-8'))
+        ############# WRITE IN PLAINTEXT
+        #with open("data/sys_exit.txt", "a") as f:  
+        #    print("%-10d %-10s %-10s %-10s" % (event.pid, format_ts(event.ts), event.comm, syscall_name(event.syscall_id)), file=f)
+        ############# WRITE IN BINARY
+        #with open("data/sys_exit.bin", "ab") as f:
+            #data = struct.pack("<di10s10s10s", event.ts, event.pid, event.p_comm, event.comm, syscall_name(event.syscall_id))
+            #f.write(data)
 
+filter_syscalls, filter_comms = get_filters()
 bpf = BPF(text=text)
 
 bpf["syscalls"].open_ring_buffer(callback)
