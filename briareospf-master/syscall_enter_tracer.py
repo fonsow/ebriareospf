@@ -50,7 +50,10 @@ def get_filters():
     # Remove the newline character at the end of each line
     comms = [line.strip() for line in comms]
 
-    return syscalls,comms
+    with open('data/filter_pid.txt', 'r') as file:
+        pids = [int(line) for line in file]
+
+    return syscalls,comms, pids
 
 def comm_for_pid(pid):
     try:
@@ -64,9 +67,9 @@ def format_ts(nanos):
 
 def callback(ctx, data, size):
     event = bpf["syscalls"].event(data)
-    if syscall_name(event.syscall_id).decode('utf-8') not in filter_syscalls and event.comm.decode('utf-8') not in filter_comms:
-        print(syscall_name(event.syscall_id))
-        print(event.comm.decode('utf-8'))
+    if syscall_name(event.syscall_id).decode('utf-8') not in filter_syscalls and event.comm.decode('utf-8') not in filter_comms and event.pid not in filter_pid:
+        print(event.pid)
+        print(filter_pid)
         ############# WRITE IN PLAINTEXT
         #with open("data/sys_enter.txt", "a") as f:  
         #    print("%-10d %-10s %-10s %-10s" % (event.pid, format_ts(event.ts), event.comm, syscall_name(event.syscall_id)), file=f)
@@ -75,7 +78,7 @@ def callback(ctx, data, size):
             #data = struct.pack("<di10s10s10s", event.ts, event.pid, event.p_comm, event.comm, syscall_name(event.syscall_id))
             #f.write(data)
 
-filter_syscalls, filter_comms = get_filters()
+filter_syscalls, filter_comms, filter_pid = get_filters()
 bpf = BPF(text=text)
 
 bpf["syscalls"].open_ring_buffer(callback)
