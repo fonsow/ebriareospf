@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 from time import sleep, strftime, time
-import os
+import sys
 from datetime import datetime
 from bcc import BPF
 from bcc.utils import printb
 from bcc.syscall import syscall_name, syscalls
 import struct
+import time
 
 text = """
 #include <linux/sched.h>
@@ -15,26 +16,22 @@ struct data_t{
     char p_comm[TASK_COMM_LEN];
     char comm[TASK_COMM_LEN];
     u32 syscall_id;
-    u64 ts;
 };
 
 
 BPF_RINGBUF_OUTPUT(syscalls, 8);
 
 TRACEPOINT_PROBE(raw_syscalls,sys_exit){
-    struct task_struct *task;
-    u64 pid_tgid = bpf_get_current_pid_tgid();
-    u32 key = pid_tgid >> 32;
-    u32 tid = (u32)pid_tgid;
-    task = (struct task_struct *)bpf_get_current_task();
-    
-    u64 ts = bpf_ktime_get_ns();
     struct data_t event = {};
+    struct task_struct *task;
+    task = (struct task_struct *)bpf_get_current_task();
+    u64 pid_tgid = bpf_get_current_pid_tgid();
+    event.pid = pid_tgid >> 32;
+    u32 tid = (u32)pid_tgid;  
     bpf_probe_read_kernel_str(&event.p_comm, TASK_COMM_LEN, task->real_parent->comm);
     bpf_get_current_comm(&event.comm, sizeof(event.comm));
-    event.pid = key;
     event.syscall_id = args->id;
-    event.ts = ts;
+    
     syscalls.ringbuf_output(&event, sizeof(event),0);
     return 0;
 }
@@ -68,8 +65,9 @@ def format_ts(nanos):
 def callback(ctx, data, size):
     event = bpf["syscalls"].event(data)
     if syscall_name(event.syscall_id).decode('utf-8') not in filter_syscalls and event.comm.decode('utf-8') not in filter_comms and event.pid not in filter_pid:
-        print(event.pid)
-        print(filter_pid)
+        pass
+        #print(event.pid)
+        #print(filter_pid)
         ############# WRITE IN PLAINTEXT
         #with open("data/sys_exit.txt", "a") as f:  
         #    print("%-10d %-10s %-10s %-10s" % (event.pid, format_ts(event.ts), event.comm, syscall_name(event.syscall_id)), file=f)
@@ -83,8 +81,10 @@ bpf = BPF(text=text)
 
 bpf["syscalls"].open_ring_buffer(callback)
 
-while 1:
+exiting = 1
+while exiting:
     try:
         bpf.ring_buffer_poll()
+        time.sleep(0.5)
     except KeyboardInterrupt:
-        os.exit()
+        sys.exit()
