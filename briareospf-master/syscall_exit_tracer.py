@@ -19,7 +19,7 @@ struct data_t{
 };
 
 
-BPF_RINGBUF_OUTPUT(syscalls, 8);
+BPF_PERF_OUTPUT(syscalls);
 
 TRACEPOINT_PROBE(raw_syscalls,sys_exit){
     struct data_t event = {};
@@ -32,7 +32,7 @@ TRACEPOINT_PROBE(raw_syscalls,sys_exit){
     bpf_get_current_comm(&event.comm, sizeof(event.comm));
     event.syscall_id = args->id;
     
-    syscalls.ringbuf_output(&event, sizeof(event),0);
+    syscalls.perf_submit(args, &event, sizeof(event));
     return 0;
 }
 """
@@ -65,8 +65,7 @@ def format_ts(nanos):
 def callback(ctx, data, size):
     event = bpf["syscalls"].event(data)
     if syscall_name(event.syscall_id).decode('utf-8') not in filter_syscalls and event.comm.decode('utf-8') not in filter_comms and event.pid not in filter_pid:
-        pass
-        #print(event.pid)
+        print(event.pid)
         #print(filter_pid)
         ############# WRITE IN PLAINTEXT
         #with open("data/sys_exit.txt", "a") as f:  
@@ -79,12 +78,12 @@ def callback(ctx, data, size):
 filter_syscalls, filter_comms, filter_pid = get_filters()
 bpf = BPF(text=text)
 
-bpf["syscalls"].open_ring_buffer(callback)
+bpf["syscalls"].open_perf_buffer(callback)
 
 exiting = 1
 while exiting:
     try:
-        bpf.ring_buffer_poll()
-        time.sleep(0.5)
+        bpf.perf_buffer_poll()
+        time.sleep(0.1)
     except KeyboardInterrupt:
         sys.exit()
