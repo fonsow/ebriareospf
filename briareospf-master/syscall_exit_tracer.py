@@ -7,6 +7,7 @@ from bcc.utils import printb
 from bcc.syscall import syscall_name, syscalls
 import struct
 import time
+from os.path import exists
 
 text = """
 #include <linux/sched.h>
@@ -64,12 +65,12 @@ def format_ts(nanos):
 
 def callback(ctx, data, size):
     event = bpf["syscalls"].event(data)
-    if syscall_name(event.syscall_id).decode('utf-8') not in filter_syscalls and event.comm.decode('utf-8') not in filter_comms and event.pid not in filter_pid:
-        print(event.pid)
+    if syscall_name(event.syscall_id).decode('utf-8') in filter_syscalls and event.comm.decode('utf-8') in filter_comms and event.pid in filter_pid:
+        #print(event.pid)
         #print(filter_pid)
         ############# WRITE IN PLAINTEXT
-        #with open("data/sys_exit.txt", "a") as f:  
-        #    print("%-10d %-10s %-10s %-10s" % (event.pid, format_ts(event.ts), event.comm, syscall_name(event.syscall_id)), file=f)
+        with open("data/sys_exit.txt", "a") as f:  
+            print("%-10d %-10d %-10s %-10s" % (event.pid, time.time(), event.comm, syscall_name(event.syscall_id)), file=f)
         ############# WRITE IN BINARY
         #with open("data/sys_exit.bin", "ab") as f:
             #data = struct.pack("<di10s10s10s", event.ts, event.pid, event.p_comm, event.comm, syscall_name(event.syscall_id))
@@ -79,11 +80,13 @@ filter_syscalls, filter_comms, filter_pid = get_filters()
 bpf = BPF(text=text)
 
 bpf["syscalls"].open_perf_buffer(callback)
+if not exists("data/sys_exit.txt"):
+    with open("data/sys_exit.txt", "w") as f:
+        print("PID\tTS\tPROGRAM_COMM\tSYSCALL",file=f)
 
-exiting = 1
-while exiting:
+while True:
     try:
         bpf.perf_buffer_poll()
-        time.sleep(0.1)
+        #time.sleep(0.01)
     except KeyboardInterrupt:
         sys.exit()

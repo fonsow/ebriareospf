@@ -1,2 +1,2 @@
-*.txt
-*.bin
+data/sys_*.txt
+data/*.bin
