@@ -65,13 +65,12 @@ def comm_for_pid(pid):
 
 def callback(ctx, data, size):
     event = bpf["syscalls"].event(data)
-    #if syscall_name(event.syscall_id).decode('utf-8') in filter_syscalls or event.comm.decode('utf-8') in filter_comms or event.pid in filter_pid:
-    print(event.pid)
-    print(event.syscall_id)
+    #print(event.pid)
+    #print(event.syscall_id)
     #print(filter_pid)
         ############# WRITE IN PLAINTEXT
-    #    with open("data/sys_exit.txt", "a") as f:  
-    #        print("%-10d %-10d %-10s %-10s" % (event.pid, time.time(), event.comm, syscall_name(event.syscall_id)), file=f)
+    with open("data/sys_exit.txt", "a") as f:  
+        print("%-10d %-10d %-10s %-10s %-10s" % (event.pid, time.time(), event.comm, event.p_comm, syscall_name(event.syscall_id)), file=f)
         ############# WRITE IN BINARY
         #with open("data/sys_exit.bin", "ab") as f:
             #data = struct.pack("<di10s10s10s", event.ts, event.pid, event.p_comm, event.comm, syscall_name(event.syscall_id))
@@ -79,7 +78,7 @@ def callback(ctx, data, size):
 
 if not exists("data/sys_exit.txt"):
     with open("data/sys_exit.txt", "w") as f:
-        print("PID\tTS\tPROGRAM_COMM\tSYSCALL",file=f)
+        print("PID\tTS\tPROGRAM_COMM\tPARENT_COMM\tSYSCALL",file=f)
 
 #######FILTERING######
 if arguments.pid:
