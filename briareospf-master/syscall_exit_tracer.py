@@ -75,6 +75,7 @@ def callback(ctx, data, size):
         #with open("data/sys_exit.bin", "ab") as f:
             #data = struct.pack("<di10s10s10s", event.ts, event.pid, event.p_comm, event.comm, syscall_name(event.syscall_id))
             #f.write(data)
+    #event.clear()
 
 if not exists("data/sys_exit.txt"):
     with open("data/sys_exit.txt", "w") as f:
@@ -104,5 +105,9 @@ text = text.replace('##FILTER_SELF##',
 bpf = BPF(text=text)
 
 bpf["syscalls"].open_perf_buffer(callback)
-while True:
-    bpf.perf_buffer_poll()
+try:
+    while True:
+        bpf.perf_buffer_poll()
+        sleep(0.01)
+except KeyboardInterrupt:
+    sys.exit()

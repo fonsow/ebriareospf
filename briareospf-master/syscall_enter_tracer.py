@@ -3,11 +3,28 @@ from time import sleep, strftime, time
 import sys
 from datetime import datetime
 from bcc import BPF
-from bcc.utils import printb
 from bcc.syscall import syscall_name, syscalls
 import struct
 import time
 from os.path import exists
+import argparse
+from os import getpid
+
+examples = """examples:
+sudo python3 syscall_enter_tracer.py -p 1828,1837 # trace pids 1828 and 1837
+sudo python3 syscall_enter_tracer.py -s 3,4 # trace syscalls number 3 and 4
+"""
+parser = argparse.ArgumentParser(
+    prog="syscall_enter_tracer",
+    description="Trace System calls",
+    formatter_class=argparse.RawDescriptionHelpFormatter,
+    epilog=examples)
+parser.add_argument("-p", "--pid",action="store",
+                    help="Filter by PID")
+parser.add_argument("-s", "--syscall", action="store",
+                    help="Filter by system call number")
+arguments= parser.parse_args()
+print(arguments)
 
 text = """
 #include <linux/sched.h>
@@ -23,12 +40,14 @@ struct data_t{
 BPF_PERF_OUTPUT(syscalls);
 
 TRACEPOINT_PROBE(raw_syscalls,sys_enter){
+    ##FILTER_SYSCALL##
     struct data_t event = {};
     struct task_struct *task;
     task = (struct task_struct *)bpf_get_current_task();
     u64 pid_tgid = bpf_get_current_pid_tgid();
-    event.pid = pid_tgid >> 32;
-    u32 tid = (u32)pid_tgid;  
+    event.pid = pid_tgid >> 32; 
+    ##FILTER_SELF##
+    ##FILTER_PID##
     bpf_probe_read_kernel_str(&event.p_comm, TASK_COMM_LEN, task->real_parent->comm);
     bpf_get_current_comm(&event.comm, sizeof(event.comm));
     event.syscall_id = args->id;
@@ -37,21 +56,6 @@ TRACEPOINT_PROBE(raw_syscalls,sys_enter){
     return 0;
 }
 """
-def get_filters():
-    with open('data/filter_syscall.txt', 'r') as file:
-        syscalls = file.readlines()
-    # Remove the newline character at the end of each line
-    syscalls = [line.strip() for line in syscalls]
-
-    with open('data/filter_comm.txt', 'r') as file:
-        comms = file.readlines()
-    # Remove the newline character at the end of each line
-    comms = [line.strip() for line in comms]
-
-    with open('data/filter_pid.txt', 'r') as file:
-        pids = [int(line) for line in file]
-
-    return syscalls,comms, pids
 
 def comm_for_pid(pid):
     try:
@@ -59,34 +63,51 @@ def comm_for_pid(pid):
     except Exception:
         return b"[unknown]"
 
-def format_ts(nanos):
-    dt = datetime.fromtimestamp(nanos / 1000000000)
-    return dt.strftime('%Y-%m-%d %H:%M:%S')
-
 def callback(ctx, data, size):
     event = bpf["syscalls"].event(data)
-    if syscall_name(event.syscall_id).decode('utf-8') in filter_syscalls and event.comm.decode('utf-8') in filter_comms and event.pid in filter_pid:
-        #print(event.pid)
-        #print(filter_pid)
+    #print(event.pid)
+    #print(event.syscall_id)
+    #print(filter_pid)
         ############# WRITE IN PLAINTEXT
-        with open("data/sys_enter.txt", "a") as f:  
-            print("%-10d %-10d %-10s %-10s" % (event.pid, time.time(), event.comm, syscall_name(event.syscall_id)), file=f)
+    with open("data/sys_enter.txt", "a") as f:  
+        print("%-10d %-10d %-10s %-10s %-10s" % (event.pid, time.time(), event.comm, event.p_comm, syscall_name(event.syscall_id)), file=f)
         ############# WRITE IN BINARY
         #with open("data/sys_enter.bin", "ab") as f:
             #data = struct.pack("<di10s10s10s", event.ts, event.pid, event.p_comm, event.comm, syscall_name(event.syscall_id))
             #f.write(data)
+    #event.clear()
 
-filter_syscalls, filter_comms, filter_pid = get_filters()
+if not exists("data/sys_enter.txt"):
+    with open("data/sys_enter.txt", "w") as f:
+        print("PID\tTS\tPROGRAM_COMM\tPARENT_COMM\tSYSCALL",file=f)
+
+#######FILTERING######
+if arguments.pid:
+    pids = [int(pid) for pid in arguments.pid.split(',')]
+    pids_if = ' && '.join(['event.pid != %d' % pid for pid in pids])
+    text = text.replace('##FILTER_PID##',
+                    'if (%s) {return 0;}' % pids_if)
+else:
+    text = text.replace('##FILTER_PID##', '')
+
+if arguments.syscall:
+    
+    syscalls = [int(syscall) for syscall in arguments.syscall.split(',')]
+    syscalls_if = ' && '.join(['args->id != %d' % syscall for syscall in syscalls])
+    text = text.replace('##FILTER_SYSCALL##',
+                    'if (%s) {return 0;}' % syscalls_if)
+else:
+    text = text.replace('##FILTER_SYSCALL##', '')
+
+text = text.replace('##FILTER_SELF##',
+                    'if(event.pid == %d) {return 0;}' % getpid())
+
 bpf = BPF(text=text)
 
 bpf["syscalls"].open_perf_buffer(callback)
-if not exists("data/sys_enter.txt"):
-    with open("data/sys_enter.txt", "w") as f:
-        print("PID\tTS\tPROGRAM_COMM\tSYSCALL",file=f)
-
-while True:
-    try:
+try:
+    while True:
         bpf.perf_buffer_poll()
-        #time.sleep(0.01)
-    except KeyboardInterrupt:
-        sys.exit()
+        sleep(0.01)
+except KeyboardInterrupt:
+    sys.enter()
