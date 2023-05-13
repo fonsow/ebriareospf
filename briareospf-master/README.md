@@ -7,7 +7,7 @@ Atualmente temos 3 módulos:
 Com a adição do cli.py podemos usar este programa para correr os principais módulos (syscall_enter_tracer.py & syscall_exit_tracer.py) a partir do mesmo programa:
 Para o fazer
 ```
-$ sudo python3 cli.py exit --pid 5678 --syscall 24
+$ sudo python3 cli.py exit --pid 5678,5682 --syscall 24,27
 $ sudo python3 cli.py enter --bt 5000 --syscall 25
 ```
 Importante notar que as flags --bt (bigger than) e --pid são mutualmente exclusivas
