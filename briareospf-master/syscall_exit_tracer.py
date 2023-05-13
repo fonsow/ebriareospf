@@ -10,21 +10,39 @@ from os.path import exists
 import argparse
 from os import getpid
 
-examples = """examples:
-sudo python3 syscall_exit_tracer.py -p 1828,1837 # trace pids 1828 and 1837
-sudo python3 syscall_exit_tracer.py -s 3,4 # trace syscalls number 3 and 4
+examples = """
+Examples:
+  syscall_exit_tracer -p 1234 -s 42
+  syscall_exit_tracer --pid 5678 --syscall 24
+  syscall_exit_tracer --bt 5000 --syscall 25
 """
+
+# Create the argument parser
 parser = argparse.ArgumentParser(
     prog="syscall_exit_tracer",
     description="Trace System calls",
     formatter_class=argparse.RawDescriptionHelpFormatter,
     epilog=examples)
-parser.add_argument("-p", "--pid",action="store",
-                    help="Filter by PID")
+
+# Add the mutually exclusive group for -p and --bt options
+group = parser.add_mutually_exclusive_group()
+
+# Add the -p option for filtering by PID
+group.add_argument("-p", "--pid", action="store",
+                   help="Filter by PID")
+
+# Add the -s option for filtering by system call number
 parser.add_argument("-s", "--syscall", action="store",
                     help="Filter by system call number")
-arguments= parser.parse_args()
+
+# Add the --bt option for backtrace (only valid without -p)
+group.add_argument("--bt", action="store",
+                   help="Include backtrace")
+
+# Parse the command line arguments
+arguments = parser.parse_args()
 print(arguments)
+
 
 text = """
 #include <linux/sched.h>
@@ -87,8 +105,9 @@ if arguments.pid:
     pids_if = ' && '.join(['event.pid != %d' % pid for pid in pids])
     text = text.replace('##FILTER_PID##',
                     'if (%s) {return 0;}' % pids_if)
-else:
-    text = text.replace('##FILTER_PID##', '')
+elif arguments.bt:
+    pid = int(arguments.bt)
+    text = text.replace('##FILTER_PID##', 'if(event.pid < %d) {return 0;}' % pid)
 
 if arguments.syscall:
     
