@@ -108,6 +108,8 @@ if arguments.pid:
 elif arguments.bt:
     pid = int(arguments.bt)
     text = text.replace('##FILTER_PID##', 'if(event.pid < %d) {return 0;}' % pid)
+else:
+    text = text.replace('##FILTER_PID##', "")
 
 if arguments.syscall:
     
@@ -127,6 +129,6 @@ bpf["syscalls"].open_perf_buffer(callback)
 try:
     while True:
         bpf.perf_buffer_poll()
-        sleep(0.01)
+        #sleep(0.01)
 except KeyboardInterrupt:
     sys.exit()

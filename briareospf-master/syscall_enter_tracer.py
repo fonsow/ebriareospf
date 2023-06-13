@@ -84,7 +84,7 @@ def comm_for_pid(pid):
 def callback(ctx, data, size):
     event = bpf["syscalls"].event(data)
     #print(event.pid)
-    #print(event.syscall_id)
+    
     #print(filter_pid)
         ############# WRITE IN PLAINTEXT
     with open("data/sys_enter.txt", "a") as f:  
@@ -108,6 +108,8 @@ if arguments.pid:
 elif arguments.bt:
     pid = int(arguments.bt)
     text = text.replace('##FILTER_PID##', 'if(event.pid < %d) {return 0;}' % pid)
+else:
+    text = text.replace('##FILTER_PID##', '')
 
 if arguments.syscall:
     
@@ -127,6 +129,6 @@ bpf["syscalls"].open_perf_buffer(callback)
 try:
     while True:
         bpf.perf_buffer_poll()
-        sleep(0.01)
+        #sleep(0.01)
 except KeyboardInterrupt:
     sys.enter()

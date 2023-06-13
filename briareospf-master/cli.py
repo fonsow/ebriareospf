@@ -53,5 +53,6 @@ if args.syscall:
     cmd_args += ["--syscall", args.syscall]
 
 # Run the tracer program with the specified arguments (if any)
-subprocess.Popen(["python3", tracer_path] + cmd_args)
+p = subprocess.Popen(["python3", tracer_path] + cmd_args)
 input("Press Enter to stop the tracer program\n")
+p.terminate()
