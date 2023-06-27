@@ -50,6 +50,7 @@ text = """
 struct data_t{
     u32 pid;
     char p_comm[TASK_COMM_LEN];
+    u32 ppid;
     char comm[TASK_COMM_LEN];
     u32 syscall_id;
 };
@@ -64,6 +65,7 @@ TRACEPOINT_PROBE(raw_syscalls,sys_exit){
     task = (struct task_struct *)bpf_get_current_task();
     u64 pid_tgid = bpf_get_current_pid_tgid();
     event.pid = pid_tgid >> 32; 
+    event.ppid = task->real_parent->pid;
     ##FILTER_SELF##
     ##FILTER_PID##
     bpf_probe_read_kernel_str(&event.p_comm, TASK_COMM_LEN, task->real_parent->comm);
@@ -88,16 +90,12 @@ def callback(ctx, data, size):
     #print(filter_pid)
         ############# WRITE IN PLAINTEXT
     with open("data/sys_exit.txt", "a") as f:  
-        print("%-10d %-10d %-10s %-10s %-10s" % (event.pid, time.time(), event.comm, event.p_comm, syscall_name(event.syscall_id)), file=f)
+        print("PID=%d;TS=%d;EXEC=%s;PPID=%d;SYSCALL=%d;" % (event.pid, time.time(), event.comm, event.ppid, event.syscall_id), file=f)
         ############# WRITE IN BINARY
         #with open("data/sys_exit.bin", "ab") as f:
             #data = struct.pack("<di10s10s10s", event.ts, event.pid, event.p_comm, event.comm, syscall_name(event.syscall_id))
             #f.write(data)
     #event.clear()
-
-if not exists("data/sys_exit.txt"):
-    with open("data/sys_exit.txt", "w") as f:
-        print("PID\tTS\tPROGRAM_COMM\tPARENT_COMM\tSYSCALL",file=f)
 
 #######FILTERING######
 if arguments.pid:
