@@ -12,9 +12,9 @@ b = BPF(src_file="tcp_tracer.c")
 interface = "wlo1"
 
 # XDP will be the first program hit when a packet is received ingress
-fx = b.load_func("xdp", BPF.XDP)
+#fx = b.load_func("xdp", BPF.XDP)
 # If the xdp() program drops ping packets, they won't get as far as TC ingress
-BPF.attach_xdp(interface, fx, 0)
+#BPF.attach_xdp(interface, fx, 0)
 
 ipr = IPRoute()
 links = ipr.link_lookup(ifname=interface)

@@ -31,5 +31,13 @@ int tc(struct __sk_buff *skb) {
                      icmp->type);
     return TC_ACT_OK;
   }
+
+  if (is_tcp_packet(data, data_end)) {
+    struct iphdr *iph = data + sizeof(struct ethhdr);
+    struct tcphdr *tcp = data + sizeof(struct ethhdr) + sizeof(struct iphdr);
+    bpf_trace_printk("[tc] TCP request for %x or %x from %x\n", iph->daddr, tcp->source,
+                    tcp->dest);
+    return TC_ACT_OK;
+  }
   return TC_ACT_OK;
 }
