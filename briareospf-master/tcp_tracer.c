@@ -1,11 +1,14 @@
 #include "tcp_tracer.h"
-
+#include <linux/bpf.h>
+#include <linux/in.h>
 #include <bcc/proto.h>
 #include <linux/pkt_cls.h>
 
 struct data_t{
   //ETH
-  unsigned int type:16;
+  u16 type;
+  unsigned char src_mac[ETH_ALEN];
+	unsigned char dst_mac[ETH_ALEN];
   /*IP
   unsigned char version:4;           // byte 0
   unsigned char header_len:4;
@@ -47,12 +50,14 @@ int xdp(struct xdp_md *ctx) {
   void *data = (void *)(long)ctx->data;
   void *data_end = (void *)(long)ctx->data_end;
   struct data_t packet = {};
-  //bpf_trace_printk("tamos ai2");
   if (is_tcp_packet(data, data_end)) {
-    //bpf_trace_printk("tamos ai");
     //eth
     struct ethhdr *eth = data;
+    //bpf_trace_printk("tamos ai lol %p, %p", eth->h_source, eth->h_dest);
     packet.type = eth->h_proto;
+    __builtin_memcpy(packet.src_mac, eth->h_source, ETH_ALEN);
+    __builtin_memcpy(packet.dst_mac, eth->h_dest, ETH_ALEN);
+    bpf_trace_printk("tamos ai lol2 %p, %p", packet.src_mac, packet.dst_mac);
     //ip
     struct iphdr *iph = data + sizeof(struct ethhdr);
     //packet.version = iph->version;

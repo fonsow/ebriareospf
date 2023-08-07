@@ -8,6 +8,17 @@ import argparse
 import socket
 import fcntl
 import struct
+import ctypes
+import binascii
+
+ETH_ALEN = 6
+
+class EthernetHeader(ctypes.Structure):
+    _fields_ = [("src_mac", ctypes.c_uint8 * ETH_ALEN),
+                ("dst_mac", ctypes.c_uint8 * ETH_ALEN)]
+
+# Create an instance of the EthernetHeader
+eth_header = EthernetHeader()
 
 bpf = BPF(src_file="tcp_tracer.c")
 
@@ -40,8 +51,14 @@ BPF.attach_xdp(interface, fx, 0)
 
 def callback(ctx, data, size):
     packet = bpf["packets"].event(data)
-    print("yau", packet.type)
-# Read data from socket filter 
+    result = bytes(packet.src_mac)
+    src_mac = ':'.join(format(byte, '02x') for byte in result)
+    result = bytes(packet.dst_mac)
+    dst_mac = ':'.join(format(byte, '02x') for byte in result)
+    print("TYPE=%d;SRC_MAC=%s;DST_MAC=%s" % (packet.type, src_mac, dst_mac))
+
+
+
 bpf["packets"].open_perf_buffer(callback)
 try:
     print("Listening on IP:", ip)
