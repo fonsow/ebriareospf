@@ -57,7 +57,7 @@ int xdp(struct xdp_md *ctx) {
     packet.type = eth->h_proto;
     __builtin_memcpy(packet.src_mac, eth->h_source, ETH_ALEN);
     __builtin_memcpy(packet.dst_mac, eth->h_dest, ETH_ALEN);
-    bpf_trace_printk("tamos ai lol2 %p, %p", packet.src_mac, packet.dst_mac);
+    //bpf_trace_printk("tamos ai lol2 %p, %p", packet.src_mac, packet.dst_mac);
     //ip
     struct iphdr *iph = data + sizeof(struct ethhdr);
     //packet.version = iph->version;
