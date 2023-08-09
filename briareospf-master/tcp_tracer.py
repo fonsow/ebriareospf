@@ -11,15 +11,6 @@ import struct
 import ctypes
 import binascii
 
-ETH_ALEN = 6
-
-class EthernetHeader(ctypes.Structure):
-    _fields_ = [("src_mac", ctypes.c_uint8 * ETH_ALEN),
-                ("dst_mac", ctypes.c_uint8 * ETH_ALEN)]
-
-# Create an instance of the EthernetHeader
-eth_header = EthernetHeader()
-
 bpf = BPF(src_file="tcp_tracer.c")
 
 def get_interface_ip(interface):
@@ -55,9 +46,11 @@ def callback(ctx, data, size):
     src_mac = ':'.join(format(byte, '02x') for byte in result)
     result = bytes(packet.dst_mac)
     dst_mac = ':'.join(format(byte, '02x') for byte in result)
-    print("TYPE=%d;SRC_MAC=%s;DST_MAC=%s" % (packet.type, src_mac, dst_mac))
-
-
+    print("TYPE=%d;SRC_MAC=%s;DST_MAC=%s;SRC_IP=%s;DST_IP=%s;IPV=%d;" % (packet.type, src_mac, dst_mac,convert_dotted(packet.src_ip), convert_dotted(packet.dst_ip),packet.version))
+          #HL=%d , packet.header_len
+def convert_dotted(ip_decimal):
+    ip_dotted_decimal = ".".join(str((ip_decimal >> i) & 0xFF) for i in (24, 16, 8, 0))
+    return ip_dotted_decimal
 
 bpf["packets"].open_perf_buffer(callback)
 try:

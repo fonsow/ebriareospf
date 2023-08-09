@@ -9,9 +9,9 @@ struct data_t{
   u16 type;
   unsigned char src_mac[ETH_ALEN];
 	unsigned char dst_mac[ETH_ALEN];
-  /*IP
+  //IP
   unsigned char version:4;           // byte 0
-  unsigned char header_len:4;
+  /*unsigned char header_len:4;
   unsigned char type_of_service;
   unsigned short total_len;
   unsigned short identification; // byte 4
@@ -21,10 +21,10 @@ struct data_t{
   unsigned short foffset:13;
   unsigned char time_to_live;             // byte 8
   unsigned char next_protocol;
-  unsigned short hchecksum;
-  unsigned int src_ip;            // byte 12
+  unsigned short hchecksum;*/
+  unsigned int src_ip;          // byte 12
   unsigned int dst_ip; 
-  //TCP
+  /*TCP
   unsigned short  src_port;   // byte 0
   unsigned short  dst_port;
   unsigned int    seq_num;    // byte 4
@@ -60,6 +60,22 @@ int xdp(struct xdp_md *ctx) {
     //bpf_trace_printk("tamos ai lol2 %p, %p", packet.src_mac, packet.dst_mac);
     //ip
     struct iphdr *iph = data + sizeof(struct ethhdr);
+    packet.src_ip = iph->saddr;
+    packet.dst_ip = iph->daddr;
+    packet.version = iph->version;
+    //packet.header_len = iph->ihl;
+    /*unsigned char header_len:4;
+    unsigned char type_of_service;
+    unsigned short total_len;
+    unsigned short identification; // byte 4
+    unsigned short ffo_unused:1;
+    unsigned short df:1;
+    unsigned short mf:1;
+    unsigned short foffset:13;
+    unsigned char time_to_live;             // byte 8
+    unsigned char next_protocol;
+    unsigned short hchecksum;
+    */
     //packet.version = iph->version;
     //tcp
     struct tcphdr *tcp = data + sizeof(struct ethhdr) + sizeof(struct iphdr);
