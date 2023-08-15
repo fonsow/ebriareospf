@@ -14,8 +14,8 @@ struct data_t{
   u8 header_len;
   u8 version;
   u8 type_of_service;
-  /*unsigned short total_len;
-  unsigned short identification; // byte 4
+  int total_len;
+  /*unsigned short identification; // byte 4
   unsigned short ffo_unused:1;
   unsigned short df:1;
   unsigned short mf:1;
@@ -64,8 +64,9 @@ int xdp(struct xdp_md *ctx) {
     packet.dst_ip = iph->daddr;
     packet.version = iph->version;
     packet.header_len = iph->ihl;
-    //bpf_trace_printk("tamos ai lol2 %u, %u", packet.version, packet.header_len);
     packet.type_of_service = iph->tos;
+    packet.total_len = iph->tot_len;
+    //bpf_trace_printk("tamos ai lol2 %u", packet.total_len);
     /*unsigned short total_len;
     unsigned short identification; // byte 4
     unsigned short ffo_unused:1;
