@@ -7,13 +7,14 @@
 struct data_t{
   //ETH
   u16 type;
+  //MACS é pointless, são sp os do router - pc
   unsigned char src_mac[ETH_ALEN];
 	unsigned char dst_mac[ETH_ALEN];
   //IP
-  unsigned char version:4;           // byte 0
-  /*unsigned char header_len:4;
-  unsigned char type_of_service;
-  unsigned short total_len;
+  u8 header_len;
+  u8 version;
+  u8 type_of_service;
+  /*unsigned short total_len;
   unsigned short identification; // byte 4
   unsigned short ffo_unused:1;
   unsigned short df:1;
@@ -23,7 +24,7 @@ struct data_t{
   unsigned char next_protocol;
   unsigned short hchecksum;*/
   unsigned int src_ip;          // byte 12
-  unsigned int dst_ip; 
+  unsigned int dst_ip; //sp o do pc
   /*TCP
   unsigned short  src_port;   // byte 0
   unsigned short  dst_port;
@@ -57,16 +58,15 @@ int xdp(struct xdp_md *ctx) {
     packet.type = eth->h_proto;
     __builtin_memcpy(packet.src_mac, eth->h_source, ETH_ALEN);
     __builtin_memcpy(packet.dst_mac, eth->h_dest, ETH_ALEN);
-    //bpf_trace_printk("tamos ai lol2 %p, %p", packet.src_mac, packet.dst_mac);
     //ip
     struct iphdr *iph = data + sizeof(struct ethhdr);
     packet.src_ip = iph->saddr;
     packet.dst_ip = iph->daddr;
     packet.version = iph->version;
-    //packet.header_len = iph->ihl;
-    /*unsigned char header_len:4;
-    unsigned char type_of_service;
-    unsigned short total_len;
+    packet.header_len = iph->ihl;
+    //bpf_trace_printk("tamos ai lol2 %u, %u", packet.version, packet.header_len);
+    packet.type_of_service = iph->tos;
+    /*unsigned short total_len;
     unsigned short identification; // byte 4
     unsigned short ffo_unused:1;
     unsigned short df:1;

@@ -46,8 +46,12 @@ def callback(ctx, data, size):
     src_mac = ':'.join(format(byte, '02x') for byte in result)
     result = bytes(packet.dst_mac)
     dst_mac = ':'.join(format(byte, '02x') for byte in result)
-    print("TYPE=%d;SRC_MAC=%s;DST_MAC=%s;SRC_IP=%s;DST_IP=%s;IPV=%d;" % (packet.type, src_mac, dst_mac,convert_dotted(packet.src_ip), convert_dotted(packet.dst_ip),packet.version))
-          #HL=%d , packet.header_len
+    print("TYPE=%d;SRC_MAC=%s;DST_MAC=%s;SRC_IP=%s;DST_IP=%s;VERSION=%u;HEADER_LEN=%u;TOS=%d" % (
+        packet.type, src_mac, dst_mac,
+        convert_dotted(packet.src_ip), convert_dotted(packet.dst_ip),
+        packet.version, packet.header_len,
+        packet.type_of_service))
+
 def convert_dotted(ip_decimal):
     ip_dotted_decimal = ".".join(str((ip_decimal >> i) & 0xFF) for i in (24, 16, 8, 0))
     return ip_dotted_decimal
