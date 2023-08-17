@@ -14,17 +14,14 @@ struct data_t{
   u8 header_len;
   u8 version;
   u8 type_of_service;
-  int total_len;
-  /*unsigned short identification; // byte 4
-  unsigned short ffo_unused:1;
-  unsigned short df:1;
-  unsigned short mf:1;
-  unsigned short foffset:13;
-  unsigned char time_to_live;             // byte 8
-  unsigned char next_protocol;
-  unsigned short hchecksum;*/
-  unsigned int src_ip;          // byte 12
-  unsigned int dst_ip; //sp o do pc
+  u32 total_len;
+  u16 identification; // byte 4
+  u16 foffset;
+  u8 time_to_live;             // byte 8
+  u8 next_protocol;
+  u16 hchecksum;
+  u32 src_ip;          // byte 12
+  u32 dst_ip; //sp o do pc
   /*TCP
   unsigned short  src_port;   // byte 0
   unsigned short  dst_port;
@@ -66,8 +63,14 @@ int xdp(struct xdp_md *ctx) {
     packet.header_len = iph->ihl;
     packet.type_of_service = iph->tos;
     packet.total_len = iph->tot_len;
+    packet.identification = iph->id;
+    packet.foffset = iph->frag_off;
+    packet.time_to_live = iph->ttl;
+    packet.next_protocol = iph->protocol;
+    packet.hchecksum = iph->check;
+
     //bpf_trace_printk("tamos ai lol2 %u", packet.total_len);
-    /*unsigned short total_len;
+    /*
     unsigned short identification; // byte 4
     unsigned short ffo_unused:1;
     unsigned short df:1;
