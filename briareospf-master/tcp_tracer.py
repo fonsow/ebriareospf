@@ -2,7 +2,7 @@
 from bcc import BPF
 import socket
 import os
-from time import sleep
+from time import sleep,time
 from pyroute2 import IPRoute
 import argparse
 import socket
@@ -46,14 +46,19 @@ def callback(ctx, data, size):
     src_mac = ':'.join(format(byte, '02x') for byte in result)
     result = bytes(packet.dst_mac)
     dst_mac = ':'.join(format(byte, '02x') for byte in result)
-    print("TYPE=%d;SRC_MAC=%s;DST_MAC=%s;SRC_IP=%s;DST_IP=%s;VERSION=%u;HEADER_LEN=%u;TOS=%d;TOT_LEN=%d;ID=%d;OFFSET=%d;TTL=%d;NEXTP=%d;CHECKSUM=%u" % (
-        packet.type, src_mac, dst_mac,
+    print("TS=%d;TYPE=%d;SRC_MAC=%s;DST_MAC=%s;SRC_IP=%s;DST_IP=%s;VERSION=%u;HEADER_LEN=%u;TOS=%d;TOT_LEN=%d;ID=%d;OFFSET=%d;TTL=%d;NEXTP=%d;CHECKSUM=%u;SRC_PORT=%d;DST_PORT=%d;SEQ_NR=%d;ACK_SEQ=%d;RES1=%d;DOFF=%d;FIN=%d;SYN=%d;RST=%d;PSH=%d;ACK=%d;URG=%d;ECE=%d;CWR=%d;WINDOW=%d;CHECK=%d;URG_PTR=%d;" % (
+        time(), packet.type, src_mac, dst_mac,
         convert_dotted(packet.src_ip), convert_dotted(packet.dst_ip),
         packet.version, packet.header_len,
         packet.type_of_service,packet.total_len,
         packet.identification, packet.foffset,
         packet.time_to_live, packet.next_protocol,
-        packet.hchecksum))
+        packet.hchecksum,packet.src_port,packet.dst_port,
+        packet.seq_nr, packet.ack_seq, packet.res1,
+        packet.doff, packet.fin, packet.syn,
+        packet.rst, packet.psh, packet.ack,
+        packet.urg, packet.ece, packet.cwr,
+        packet.window, packet.check, packet.urg_ptr))
 
 def convert_dotted(ip_decimal):
     ip_dotted_decimal = ".".join(str((ip_decimal >> i) & 0xFF) for i in (24, 16, 8, 0))

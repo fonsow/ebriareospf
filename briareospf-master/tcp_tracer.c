@@ -22,24 +22,24 @@ struct data_t{
   u16 hchecksum;
   u32 src_ip;          // byte 12
   u32 dst_ip; //sp o do pc
-  /*TCP
-  unsigned short  src_port;   // byte 0
-  unsigned short  dst_port;
-  unsigned int    seq_num;    // byte 4
-  unsigned int    ack_num;    // byte 8
-  unsigned char   offset:4;    // byte 12
-  unsigned char   reserved:4;
-  unsigned char   flag_cwr:1;
-  unsigned char   flag_ece:1;
-  unsigned char   flag_urg:1;
-  unsigned char   flag_ack:1;
-  unsigned char   flag_psh:1;
-  unsigned char   flag_rst:1;
-  unsigned char   flag_syn:1;
-  unsigned char   flag_fin:1;
-  unsigned short  rcv_wnd:1;
-  unsigned short  cksum;      // byte 16
-  unsigned short  urg_ptr;*/
+  //TCP corrige nos docs para usar info do github de linux
+  u16 src_port;
+  u16 dst_port;
+  u32 seq_nr;
+  u32 ack_seq;
+  u8 res1;
+  u8 doff;
+  u8 fin;
+  u8 syn;
+  u8 rst;
+  u8 psh;
+  u8 ack;
+  u8 urg;
+  u8 ece;
+  u8 cwr;
+  u16 window;
+  u16 check;
+  u16 urg_ptr;
 };
 
 BPF_PERF_OUTPUT(packets);
@@ -70,20 +70,25 @@ int xdp(struct xdp_md *ctx) {
     packet.hchecksum = iph->check;
 
     //bpf_trace_printk("tamos ai lol2 %u", packet.total_len);
-    /*
-    unsigned short identification; // byte 4
-    unsigned short ffo_unused:1;
-    unsigned short df:1;
-    unsigned short mf:1;
-    unsigned short foffset:13;
-    unsigned char time_to_live;             // byte 8
-    unsigned char next_protocol;
-    unsigned short hchecksum;
-    */
-    //packet.version = iph->version;
     //tcp
     struct tcphdr *tcp = data + sizeof(struct ethhdr) + sizeof(struct iphdr);
-    
+    packet.src_port = tcp->source;
+    packet.dst_port = tcp->dest;
+    packet.seq_nr = tcp->seq;
+    packet.ack_seq = tcp->ack_seq;
+    packet.res1 = tcp->res1;
+    packet.doff = tcp->doff;
+    packet.fin = tcp->fin;
+    packet.syn = tcp->syn;
+    packet.rst = tcp->rst;
+    packet.psh = tcp->psh;
+    packet.ack = tcp->ack;
+    packet.urg = tcp->urg;
+    packet.ece = tcp->ece;
+    packet.window = tcp->window;
+    packet.check = tcp->check;
+    packet.urg_ptr = tcp->urg_ptr;
+
     packets.perf_submit(ctx, &packet, sizeof(packet));
   }
 
